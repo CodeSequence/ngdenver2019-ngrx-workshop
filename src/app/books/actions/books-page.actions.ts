@@ -27,11 +27,3 @@ export const deleteBook = createAction(
   props<{ book: Book }>()
 );
 
-export type BooksActions = ReturnType<
-  | typeof enter
-  | typeof selectBook
-  | typeof clearSelectedBook
-  | typeof createBook
-  | typeof updateBook
-  | typeof deleteBook
->;
