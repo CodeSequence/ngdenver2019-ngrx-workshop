@@ -20,10 +20,3 @@ export const bookDeleted = createAction(
   "[Books API] Book Deleted",
   props<{ book: Book }>()
 );
-
-export type BooksApiActions = ReturnType<
-  | typeof booksLoaded
-  | typeof bookCreated
-  | typeof bookUpdated
-  | typeof bookDeleted
->;

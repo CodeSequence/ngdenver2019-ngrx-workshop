@@ -1,7 +1,7 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from "@ngrx/entity";
 import { Book } from "src/app/shared/models/book.model";
 import { BooksPageActions, BooksApiActions } from "src/app/books/actions";
-import { createSelector } from "@ngrx/store";
+import { createSelector, on, createReducer, Action } from "@ngrx/store";
 
 export const initialBooks: Book[] = [
   {
@@ -34,47 +34,42 @@ export const initialState = adapter.getInitialState({
   activeBookId: null
 });
 
+const booksReducer = createReducer(
+  initialState,
+  on(BooksApiActions.booksLoaded, 
+    (state, { books }) => adapter.addAll(books, state)
+  ),
+  on(BooksPageActions.selectBook,
+    (state, { bookId }) => ({ ...state, activeBookId: bookId })
+  ),
+  on(BooksPageActions.clearSelectedBook, 
+    state => ({ ...state,activeBookId: null })
+  ),
+  on(BooksApiActions.bookCreated, 
+    (state, { book }) => adapter.addOne(book, {
+      ...state,
+      activeBookId: book.id
+    })
+  ),
+  on(BooksApiActions.bookUpdated, 
+    (state, { book }) => adapter.updateOne(
+      { id: book.id, changes: book },
+      { ...state, activeBookId: book.id }
+    )
+  ),
+  on(BooksApiActions.bookDeleted, 
+    (state, { book }) => adapter.removeOne(book.id, {
+      ...state,
+      activeBookId: null
+    })
+  )
+);
+
 export function reducer(
   state = initialState,
-  action: BooksPageActions.BooksActions | BooksApiActions.BooksApiActions
+  action: Action
 ): State {
-  switch (action.type) {
-    case BooksApiActions.booksLoaded.type:
-      return adapter.addAll(action.books, state);
-
-    case BooksPageActions.selectBook.type:
-      return {
-        ...state,
-        activeBookId: action.bookId
-      };
-
-    case BooksPageActions.clearSelectedBook.type:
-      return {
-        ...state,
-        activeBookId: null
-      };
-
-    case BooksApiActions.bookCreated.type:
-      return adapter.addOne(action.book, {
-        ...state,
-        activeBookId: action.book.id
-      });
-
-    case BooksApiActions.bookUpdated.type:
-      return adapter.updateOne(
-        { id: action.book.id, changes: action.book },
-        { ...state, activeBookId: action.book.id }
-      );
-
-    case BooksApiActions.bookDeleted.type:
-      return adapter.removeOne(action.book.id, {
-        ...state,
-        activeBookId: null
-      });
-
-    default:
-      return state;
-  }
+  return booksReducer(state, action);
 }
 
 export const { selectAll, selectEntities } = adapter.getSelectors();
